@@ -5,9 +5,9 @@
 
 ## 必要な物
 
-* docker
+* [docker](https://docs.docker.com/userguide/)
 * [docker-compose](https://docs.docker.com/compose/)
-* docker-machine
+* [docker-machine](https://docs.docker.com/machine/)
 
 ## dockerのhost環境をvirtualboxで作成
 
@@ -94,13 +94,13 @@ Hello 2 World !
 
 ## 更新されましたか？
 
-コンテナ内のgoは```go run```状態であるはずなのに、なぜ？
+コンテナ内のgoは```go run``` 状態であるはずなのに、なぜ？
 
-それは、goコンテナ内では```go run```ではなく、```godo```が実行状態にあるからです。
-```godo```は、gruntのようなものでファイルの変更を検知して、様々なtasksを実行してくれます。
+それは、goコンテナ内では```go run``` ではなく、```godo``` が実行状態にあるからです。
+```godo``` は、gruntのようなものでファイルの変更を検知して、様々なtasksを実行してくれます。
 
 このコンテナではgo run main.goを再実行する様に定義しています。
-なので```main.go```の変更を検知して、内部で```go run main.go```を再実行してくれたのです。
+なので```main.go``` の変更を検知して、内部で```go run main.go``` を再実行してくれたのです。
 
 # 最後に
 
