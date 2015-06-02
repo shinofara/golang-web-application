@@ -5,17 +5,18 @@ import (
 	"net"
 	"net/http"
 	"net/http/fcgi"
+
+	"github.com/zenazn/goji"
+	"github.com/zenazn/goji/web"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World %s!", r.URL.Path[1:])
+func hello(c web.C, w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, %s!", c.URLParams["name"])
 }
 
 func main() {
-	l, err := net.Listen("tcp", ":9000")
-	if err != nil {
-		return
-	}
-	http.HandleFunc("/", handler)
-	fcgi.Serve(l, nil)
+	goji.Get("/hello/:name", hello)
+
+	listener, _ := net.Listen("tcp", ":9000")
+	fcgi.Serve(listener, goji.DefaultMux)
 }
