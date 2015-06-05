@@ -4,8 +4,8 @@ FROM golang:1.4.2
 RUN go get gopkg.in/godo.v1/cmd/godo
 
 # WAF
-RUN go get github.com/zenazn/goji
-RUN go get github.com/zenazn/goji/web
+RUN go get github.com/gorilla/rpc/v2
+RUN go get github.com/gorilla/rpc/v2/json2
 
 WORKDIR /go/src/app
 

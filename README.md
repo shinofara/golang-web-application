@@ -1,4 +1,4 @@
-複数のDockerコンテナで造る一つのGo言語WEBアプリケーション開発環境
+NginxとGoコンテナでjsonrpc apiサーバを開発環境を造る
 =========================
 
 # 事前準備
@@ -8,6 +8,15 @@
 * [docker](https://docs.docker.com/userguide/)
 * [docker-compose](https://docs.docker.com/compose/)
 * [docker-machine](https://docs.docker.com/machine/)
+
+## 登場するGoパッケージ
+
+jsonrpcは標準ライブラリではなく、Gorillaと呼ばれるWAFを使ってみます。
+
+* go get github.com/gorilla/rpc/v2       
+* go get github.com/gorilla/rpc/v2/json2 
+* go get gopkg.in/godo.v1/cmd/godo
+
 
 ## dockerのhost環境をvirtualboxで作成
 
@@ -48,6 +57,7 @@ CONTAINER ID        IMAGE                               COMMAND                C
 ```
 $ git clone https://github.com/shinofara/golang-web-application.git
 $ golang-web-application
+$ git checkout gorira-jsonrpc-2
 ```
 
 ## Containerを立ち上げる
@@ -69,47 +79,23 @@ Attaching to golangwebapplication_go_1, golangwebapplication_nginx_1
 ## 確認してみましょう
 
 ```
-$ curl -l http://<docker host serverのIP>/hello/world
-Hello World !
+$ curl -H "Content-Type: application/json" -d '{"jsonrpc":"2.0", "id":"test", "method": "Counter.Get", "params": {}}' -s http://192.168.99.100/jsonrpc/ 
+{"jsonrpc":"2.0","result":{"Count":0},"id":"test"} 
 ```
 
+jsonrpc 2.0protocolでやりとりが出来ました。
 
-## 編集してみましょう
-
-vimなどで```main.go```を編集してください。
-
-```
-- fmt.Fprintf(w, "Hello, %s!", c.URLParams["name"])
-+ fmt.Fprintf(w, "Hello 2, %s!", c.URLParams["name"])
-```
-
-編集したら保存しましょう。閉じちゃってもOKです。
-
-## 確認してみましょう
+## methodの追加
 
 ```
-$ curl -l http://<docker host serverのIP>/hello/world
-Hello 2 World !
+s := rpc.NewServer()                                                                  
+s.RegisterCodec(json2.NewCustomCodec(&rpc.CompressionSelector{}), "application/json") 
+s.RegisterService(new(Counter), "")                                                   
+http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./"))))              
+http.Handle("/jsonrpc/", s)                                                           
+listener, _ := net.Listen("tcp", ":9000")                                             
+                                                                                      
+log.Fatal(fcgi.Serve(listener, nil))                                                  
 ```
 
-## 更新されましたか？
-
-コンテナ内のgoは```go run``` 状態であるはずなのに、なぜ？
-
-それは、goコンテナ内では```go run``` ではなく、```godo``` が実行状態にあるからです。
-```godo``` は、gruntのようなものでファイルの変更を検知して、様々なtasksを実行してくれます。
-
-このコンテナではgo run main.goを再実行する様に定義しています。
-なので```main.go``` の変更を検知して、内部で```go run main.go``` を再実行してくれたのです。
-
-# 最後に
-
-ここまでで
-
-1. Nginxコンテナ作成
-2. Go FCGIコンテナ作成
-3. GoのWAFであるgojiの導入
-4. ファイルの更新を検知しするタスクランナーgodoの導入
-
-といった４つの事が出来るようになりました。
-あとはMysqlコンテナを作って連携すればひと通りのWEBサービス開発を行える状態になりそうです。
+コードを見てもらえればと思いますが、```s.RegisterService``` でmethodの登録を行っています。
